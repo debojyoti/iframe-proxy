@@ -61,6 +61,8 @@ const _getPageHtml = async (link) => {
       $(this).remove();
     });
 
+    $("head").prepend('<base href="' + link + '">');
+
     let preparedData = $.html();
     _setDbPage(link, preparedData);
     // const pdf = await page.pdf({ format: "A4" });
