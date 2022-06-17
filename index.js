@@ -2,22 +2,30 @@
 const puppeteer = require("puppeteer");
 const express = require("express");
 const fs = require("fs");
+var cors = require("cors");
+
 const cheerio = require("cheerio");
+const NodeCache = require("node-cache"); // auto expiring in memory caching collection
+const cache = new NodeCache({ stdTTL: 300 }); // cache source HTML for 5 minutes, after which we fetch a new version
 
 const app = express();
+app.use(cors());
+
 const port = 3002;
 
 const _setDbPage = (link, data) => {
-  let content = fs.readFileSync(process.cwd() + "/" + "db.json").toString();
-  const parsedData = JSON.parse(content);
-  parsedData[link] = JSON.stringify(data);
-  fs.writeFileSync("db.json", JSON.stringify(parsedData));
+  cache.set(link, data);
+  //   let content = fs.readFileSync(process.cwd() + "/" + "db.json").toString();
+  //   const parsedData = JSON.parse(content);
+  //   parsedData[link] = JSON.stringify(data);
+  //   fs.writeFileSync("db.json", JSON.stringify(parsedData));
 };
 
 const _getDbPage = (link) => {
-  let content = fs.readFileSync(process.cwd() + "/" + "db.json").toString();
-  const parsedData = JSON.parse(content);
-  return parsedData[link] ? JSON.parse(parsedData[link]) : null;
+  return cache.get(link);
+  //     let content = fs.readFileSync(process.cwd() + "/" + "db.json").toString();
+  //   const parsedData = JSON.parse(content);
+  //   return parsedData[link] ? JSON.parse(parsedData[link]) : null;
 };
 
 const _getPageHtml = async (link) => {
@@ -37,12 +45,12 @@ const _getPageHtml = async (link) => {
     // });
 
     // Configure the navigation timeout
-    await page.setDefaultNavigationTimeout(0);
+    await page.setDefaultTimeout(1000);
 
     // Navigate to some website e.g Our Code World
     // await page.waitForNavigation({ waitUntil: "networkidle2" });
 
-    await page.goto(link);
+    await page.goto(link, { timeout: 100 });
     // await page.waitFor(5000);
     const data = await page.evaluate(
       () => document.querySelector("*").outerHTML
@@ -52,6 +60,7 @@ const _getPageHtml = async (link) => {
     $("script").each(function () {
       $(this).remove();
     });
+
     $("head").prepend('<base href="' + link + '">');
 
     let preparedData = $.html();
