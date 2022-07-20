@@ -13,6 +13,20 @@ app.use(cors());
 
 const port = 3002;
 
+const options = {
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-accelerated-2d-canvas",
+    "--no-first-run",
+    "--no-zygote",
+    "--single-process", // <- this one doesn't works in Windows
+    "--disable-gpu",
+  ],
+  headless: true,
+};
+
 const _setDbPage = (link, data) => {
   cache.set(link, data);
   //   let content = fs.readFileSync(process.cwd() + "/" + "db.json").toString();
@@ -32,9 +46,7 @@ const _getPageHtml = async (link) => {
   console.log("link :>> ", link);
   const page = _getDbPage(link);
   if (!page) {
-    const browser = await puppeteer.launch({
-      headless: true,
-    });
+    const browser = await puppeteer.launch(options);
 
     // Create a new page
     const page = await browser.newPage();
