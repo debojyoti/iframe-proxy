@@ -25,8 +25,8 @@ const options = {
     "--disable-gpu",
   ],
   headless: true,
+  executablePath: "/usr/bin/chromium-browser",
 };
-
 const _setDbPage = (link, data) => {
   cache.set(link, data);
   //   let content = fs.readFileSync(process.cwd() + "/" + "db.json").toString();
@@ -57,12 +57,12 @@ const _getPageHtml = async (link) => {
     // });
 
     // Configure the navigation timeout
-    await page.setDefaultTimeout(1000);
+    //    await page.setDefaultTimeout(1000);
 
     // Navigate to some website e.g Our Code World
     // await page.waitForNavigation({ waitUntil: "networkidle2" });
 
-    await page.goto(link, { timeout: 100 });
+    await page.goto(link);
     // await page.waitFor(5000);
     const data = await page.evaluate(
       () => document.querySelector("*").outerHTML
