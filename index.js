@@ -25,7 +25,7 @@ const options = {
     "--disable-gpu",
   ],
   headless: true,
-  // executablePath: "/usr/bin/chromium-browser",
+  executablePath: "/usr/bin/chromium-browser",
 };
 const _setDbPage = (link, data) => {
   cache.set(link, data);
