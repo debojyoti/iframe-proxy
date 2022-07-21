@@ -73,7 +73,8 @@ const _getPageHtml = async (link) => {
       $(this).remove();
     });
 
-    $("head").prepend('<base href="' + link + '">');
+    $("head").prepend('<base href="' + link + '" target="_blank">');
+    // $("head").prepend('<script>  </script>');
 
     let preparedData = $.html();
     _setDbPage(link, preparedData);
