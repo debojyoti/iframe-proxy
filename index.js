@@ -86,6 +86,12 @@ const _getPageHead = async (link) => {
     );
     let $ = cheerio.load(data);
 
+    $("script").each(function () {
+      $(this).remove();
+    });
+
+    $("head").prepend('<base href="' + link + '" target="_blank">');
+
     const title = $("title").text();
     let imageLink = "";
     const canonicalTag = $('meta[name="twitter:image"]');
