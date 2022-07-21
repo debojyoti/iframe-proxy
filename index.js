@@ -86,13 +86,18 @@ const _getPageHead = async (link) => {
     );
     let $ = cheerio.load(data);
 
-    var title = $("title").text();
+    const title = $("title").text();
+    let imageLink = "";
+    const canonicalTag = $('meta[name="twitter:image"]');
+    if (canonicalTag) {
+      imageLink = canonicalTag.attr("content");
+    }
 
     let preparedData = $.html();
     _setDbPage(link, preparedData);
     // const pdf = await page.pdf({ format: "A4" });
     await browser.close();
-    return title;
+    return { title, imageLink };
   } else {
     return page;
   }
@@ -100,8 +105,8 @@ const _getPageHead = async (link) => {
 
 app.get("/head", async (req, res) => {
   const { url } = req.query;
-  const title = await _getPageHead(url);
-  res.send({ title });
+  const data = await _getPageHead(url);
+  res.send(data);
 });
 
 app.get("/", async (req, res) => {
