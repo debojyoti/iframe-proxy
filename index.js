@@ -25,7 +25,7 @@ const options = {
     "--disable-gpu",
   ],
   headless: true,
-  executablePath: "/usr/bin/chromium-browser",
+  // executablePath: "/usr/bin/chromium-browser",
 };
 const _setDbPage = (link, data) => {
   cache.set(link, data);
@@ -50,20 +50,7 @@ const _getPageHtml = async (link) => {
 
     // Create a new page
     const page = await browser.newPage();
-
-    // page.setViewport({
-    //   width: 1920,
-    //   height: 1080,
-    // });
-
-    // Configure the navigation timeout
-    //    await page.setDefaultTimeout(1000);
-
-    // Navigate to some website e.g Our Code World
-    // await page.waitForNavigation({ waitUntil: "networkidle2" });
-
     await page.goto(link);
-    // await page.waitFor(5000);
     const data = await page.evaluate(
       () => document.querySelector("*").outerHTML
     );
@@ -74,7 +61,6 @@ const _getPageHtml = async (link) => {
     });
 
     $("head").prepend('<base href="' + link + '" target="_blank">');
-    // $("head").prepend('<script>  </script>');
 
     let preparedData = $.html();
     _setDbPage(link, preparedData);
@@ -85,6 +71,38 @@ const _getPageHtml = async (link) => {
     return page;
   }
 };
+
+const _getPageHead = async (link) => {
+  console.log("link :>> ", link);
+  const page = _getDbPage(link);
+  if (!page) {
+    const browser = await puppeteer.launch(options);
+
+    // Create a new page
+    const page = await browser.newPage();
+    await page.goto(link);
+    const data = await page.evaluate(
+      () => document.querySelector("*").outerHTML
+    );
+    let $ = cheerio.load(data);
+
+    var title = $("title").text();
+
+    let preparedData = $.html();
+    _setDbPage(link, preparedData);
+    // const pdf = await page.pdf({ format: "A4" });
+    await browser.close();
+    return title;
+  } else {
+    return page;
+  }
+};
+
+app.get("/head", async (req, res) => {
+  const { url } = req.query;
+  const title = await _getPageHead(url);
+  res.send({ title });
+});
 
 app.get("/", async (req, res) => {
   const { url } = req.query;
