@@ -1,24 +1,56 @@
 {
-  "name": "preview-generator",
+  "name": "node-iframe-replacement",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node & express replacement for the HTML iframe",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./server.js",
+    "test": "./node_modules/.bin/jasmine-node --verbose --junitreport test"
   },
-  "nodemonConfig": {
-    "ignore": [
-      "*.json"
-    ]
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/john-doherty/node-iframe-replacement.git"
   },
-  "author": "",
+  "keywords": [
+    "node",
+    "iframe",
+    "replacement",
+    "express",
+    "alternative"
+  ],
+  "author": {
+    "name": "John Doherty",
+    "email": "contact@johndoherty.info",
+    "url": "https://twitter.com/CambridgeMVP"
+  },
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/john-doherty/node-iframe-replacement/issues"
+  },
+  "homepage": "https://github.com/john-doherty/node-iframe-replacement#readme",
+  "engines": {
+    "node": ">= 6.9.2"
+  },
   "dependencies": {
     "capture-website": "^2.4.0",
-    "cheerio": "^1.0.0-rc.11",
+    "cheerio": "^0.20.0",
     "cors": "^2.8.5",
-    "express": "^4.18.1",
-    "node-cache": "^5.1.2",
-    "puppeteer": "^14.4.0"
+    "express": "^4.16.3",
+    "express-handlebars": "^3.0.0",
+    "geckodriver": "^3.2.0",
+    "is-url": "^1.2.4",
+    "node-cache": "^3.2.1",
+    "puppeteer": "^14.4.0",
+    "request-promise": "^3.0.0",
+    "selenium-standalone": "^8.2.4",
+    "selenium-webdriver": "^4.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.12.2",
+    "eslint-config-airbnb-base": "^11.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "jasmine-node": "^1.16.2",
+    "nock": "^9.6.1",
+    "supertest": "^2.0.1"
   }
 }
