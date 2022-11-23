@@ -23,11 +23,10 @@ function Server() {
   app.set("view engine", "hbs");
 
   // Below endpoint will be removed soon. Keeping this for now to support existing frontend
-  app.get("/", function (req, res) {
-    res.merge("containers", {
-      sourceUrl: req.query.url, // external url to fetch
-      sourcePlaceholder: 'div[data-entityid="container-top-stories#1"]', // css selector to inject our content into
-    });
+  app.get("/", async (req, res) => {
+    const { url, blockJs = 'true' } = req.query;
+    const pageHtml = await HeadlessParser.getPageHtml(url, blockJs);
+    res.send(pageHtml);
   });
 
   app.get("/basic-parse", function (req, res) {
