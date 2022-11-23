@@ -59,9 +59,9 @@ function Server() {
 
 
   // start the server
-  app.listen(8080, function () {
+  app.listen(3002, function () {
     console.log(
-      "Server running... Visit http://localhost:8080 in your browser"
+      "Server running... Visit http://localhost:3002 in your browser"
     );
   });
 }
