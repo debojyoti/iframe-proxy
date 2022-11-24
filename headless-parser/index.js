@@ -1,29 +1,35 @@
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-extra");
+require('chromedriver');
+
 const fs = require("fs");
 const SeleniumParser = require("./seleniumparser");
+const { PuppeteerBlocker } = require("@cliqz/adblocker-puppeteer");
+const fetch = require("cross-fetch");
+
+// add stealth plugin and use defaults (all evasion techniques)
+const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+puppeteer.use(StealthPlugin());
+const { clickCmp } = require("puppeteer-cmp-clicker");
+
+const sleepTime = (n) => new Promise((r) => setTimeout(() => r(), n));
 
 const cheerio = require("cheerio");
 const NodeCache = require("node-cache"); // auto expiring in memory caching collection
 const cache = new NodeCache({ stdTTL: 300 }); // cache source HTML for 5 minutes, after which we fetch a new version
 
 const options = {
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      '--disable-web-security',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins',
-      '--disable-site-isolation-trials',
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--single-process", // <- this one doesn't works in Windows
-      "--disable-gpu",
-    ],
-    headless: true,
-    // executablePath: "/usr/bin/chromium-browser",
-  };
+  args: [
+    "--no-sandbox",
+    "--disable-setuid-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-accelerated-2d-canvas",
+    "--no-first-run",
+    "--no-zygote",
+    "--single-process", // <- this one doesn't works in Windows
+  ],
+  headless: true,
+  executablePath: "/usr/bin/chromium-browser",
+};
 
 const HeadlessParser = {
   _setDbPage: (link, data) => {
@@ -35,40 +41,52 @@ const HeadlessParser = {
 
   _scrapePage: async ({
     link,
-    parser = 'selenium' // or 'selenium'
+    parser = "puppeter", // or 'selenium'
   }) => {
-    switch(parser) {
-      case 'puppeter': {
+    switch (parser) {
+      case "puppeter": {
+        const blocker = await PuppeteerBlocker.fromLists(fetch, [
+          "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt",
+        ]);
         const browser = await puppeteer.launch(options);
-
         // Create a new page
         const page = await browser.newPage();
-        await page.setBypassCSP(true);
-        await page.setUserAgent(
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
-        );
+        await blocker.enableBlockingInPage(page);
+
+        // await page.setBypassCSP(true);
+        // await page.setUserAgent(
+        //   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36"
+        // );
         await page.goto(link);
-        const data = await page.evaluate(
-          () => document.querySelector("*").outerHTML
-        );
+        // await page.waitForSelector('.js-accept-cookies', { visible: true });
+        // await page.click('.js-accept-cookies');
+        // await sleepTime(500);
+        // const res = await clickCmp({ page })
+        // console.log('res', res)
+        const data = await page.evaluate((_) => {
+          return document.querySelector("*").outerHTML;
+        });
+        console.log("data.length", data.length);
+        // console.log('elements', elements)
+
         await browser.close();
         return data;
       }
-      case 'selenium': {
+      case "selenium": {
         const data = await SeleniumParser._scrapePage(link);
         return data;
       }
     }
   },
 
-  getPageHtml: async (link, blockJs = 'true') => {
+  getPageHtml: async (link, blockJs = "true") => {
     console.log("link :>> ", link);
     const page = HeadlessParser._getDbPage(link);
     if (!page) {
       const data = await HeadlessParser._scrapePage({
         link,
-        parser: 'selenium'
-      })
+        parser: "puppeter",
+      });
       let $ = cheerio.load(data);
 
       // if (blockJs === true) {
@@ -77,15 +95,14 @@ const HeadlessParser = {
       //   });
       // }
 
-
       $("head").prepend('<base href="' + link + '" target="_blank">');
 
       let preparedData = $.html();
-      
+
       HeadlessParser._setDbPage(link, preparedData);
 
       // await browser.close();
-    //   console.log('preparedData :>> ', preparedData);
+      //   console.log('preparedData :>> ', preparedData);
       //   console.log("preparedData.length :>> ", preparedData.length);
       return preparedData;
     } else {
@@ -99,8 +116,8 @@ const HeadlessParser = {
     if (!page) {
       const data = await HeadlessParser._scrapePage({
         link,
-        parser: 'selenium'
-      })
+        parser: "puppeter",
+      });
       let $ = cheerio.load(data);
 
       $("script").each(function () {
