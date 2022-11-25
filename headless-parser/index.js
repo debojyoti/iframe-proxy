@@ -16,7 +16,7 @@ const sleepTime = (n) => new Promise((r) => setTimeout(() => r(), n));
 const cheerio = require("cheerio");
 const NodeCache = require("node-cache"); // auto expiring in memory caching collection
 const cache = new NodeCache({ stdTTL: 300 }); // cache source HTML for 5 minutes, after which we fetch a new version
-
+const cookieDict = "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt";
 const options = {
   args: [
     "--no-sandbox",
@@ -28,8 +28,14 @@ const options = {
     "--single-process", // <- this one doesn't works in Windows
   ],
   headless: true,
-  executablePath: "/usr/bin/chromium-browser",
+  // executablePath: "/usr/bin/chromium-browser",
 };
+
+let browser = null;
+let page = null;
+const blocker = PuppeteerBlocker.parse(fs.readFileSync('headless-parser/cookie-dict.txt', 'utf-8'));
+
+
 
 const HeadlessParser = {
   _setDbPage: (link, data) => {
@@ -45,12 +51,14 @@ const HeadlessParser = {
   }) => {
     switch (parser) {
       case "puppeter": {
-        const blocker = await PuppeteerBlocker.fromLists(fetch, [
-          "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt",
-        ]);
-        const browser = await puppeteer.launch(options);
         // Create a new page
-        const page = await browser.newPage();
+        if (!browser) {
+          browser = await puppeteer.launch(options);
+        }
+        if (!page) {
+          page = await browser.newPage();
+        }
+        
         await blocker.enableBlockingInPage(page);
 
         // await page.setBypassCSP(true);
@@ -66,10 +74,8 @@ const HeadlessParser = {
         const data = await page.evaluate((_) => {
           return document.querySelector("*").outerHTML;
         });
-        console.log("data.length", data.length);
         // console.log('elements', elements)
-
-        await browser.close();
+        // browser.close();
         return data;
       }
       case "selenium": {
@@ -90,9 +96,9 @@ const HeadlessParser = {
       let $ = cheerio.load(data);
 
       // if (blockJs === true) {
-      //   $("script").each(function () {
-      //     $(this).remove();
-      //   });
+        $("script").each(function () {
+          $(this).remove();
+        });
       // }
 
       $("head").prepend('<base href="' + link + '" target="_blank">');
