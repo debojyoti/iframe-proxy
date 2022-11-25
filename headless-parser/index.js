@@ -28,11 +28,10 @@ const options = {
     "--single-process", // <- this one doesn't works in Windows
   ],
   headless: true,
-  // executablePath: "/usr/bin/chromium-browser",
+  executablePath: "/usr/bin/chromium-browser",
 };
 
 let browser = null;
-let page = null;
 const blocker = PuppeteerBlocker.parse(fs.readFileSync('headless-parser/cookie-dict.txt', 'utf-8'));
 
 
@@ -55,9 +54,7 @@ const HeadlessParser = {
         if (!browser) {
           browser = await puppeteer.launch(options);
         }
-        if (!page) {
-          page = await browser.newPage();
-        }
+        const page = await browser.newPage();
         
         await blocker.enableBlockingInPage(page);
 
@@ -76,6 +73,7 @@ const HeadlessParser = {
         });
         // console.log('elements', elements)
         // browser.close();
+        page.close();
         return data;
       }
       case "selenium": {
